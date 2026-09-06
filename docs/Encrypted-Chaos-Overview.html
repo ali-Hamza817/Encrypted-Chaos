@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Encrypted-Chaos — Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand:#0d9488; --brandd:#0f766e; --ink:#0f172a; --slate:#475569;
+    --mist:#f1f5f9; --line:#e2e8f0; --rose:#e11d48; --amber:#b45309; --green:#047857;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  @page{ size:A4; margin:0; }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{
+    font-family:'Poppins','Segoe UI',system-ui,sans-serif;
+    color:var(--ink); font-size:10pt; line-height:1.45;
+    background:#fff;
+  }
+  .page{
+    width:210mm; min-height:271mm; padding:15mm 17mm 12mm;
+    page-break-after:always; page-break-inside:avoid;
+    display:flex; flex-direction:column;
+  }
+  .page:last-child{ page-break-after:auto; }
+
+  h2{
+    color:var(--brandd); font-size:13pt; font-weight:600;
+    margin:13pt 0 5pt; padding-bottom:3pt;
+    border-bottom:1.5pt solid rgba(13,148,136,.35);
+  }
+  h2:first-of-type{ margin-top:6pt; }
+  p{ margin:4.5pt 0; }
+  strong{ font-weight:600; }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+
+  /* title band */
+  .band{
+    background:var(--ink); color:#fff; border-radius:9pt;
+    padding:15pt 18pt 16pt;
+  }
+  .band .name{ font-size:23pt; font-weight:700; letter-spacing:-.01em; }
+  .band .name b{ color:var(--brand); font-weight:700; }
+  .band .tag{ font-size:12pt; margin-top:2pt; color:#fff; }
+  .band .sub{ font-size:9.5pt; color:rgba(255,255,255,.72); margin-top:7pt; max-width:150mm; }
+  .band .meta{ font-family:'JetBrains Mono',monospace; font-size:8pt;
+    color:rgba(255,255,255,.55); margin-top:9pt; }
+
+  /* callout */
+  .callout{
+    background:var(--mist); border-radius:7pt; padding:9pt 12pt; margin:8pt 0;
+  }
+  .callout.rule{ border-left:3pt solid var(--brand); }
+
+  ul{ margin:5pt 0 5pt 0; padding-left:16pt; }
+  li{ margin:3pt 0; }
+  .tick{ color:var(--green); font-weight:700; }
+  .star{ color:var(--amber); font-weight:700; }
+
+  /* figure */
+  figure{ margin:4pt 0 4pt; text-align:center; }
+  figure img{ max-height:50mm; width:auto; max-width:100%;
+    border:1pt solid var(--line); border-radius:6pt; display:inline-block; }
+  figcaption{ font-size:8.5pt; color:var(--slate); margin-top:4pt; text-align:left; }
+
+  /* table */
+  table{ width:100%; border-collapse:collapse; margin:8pt 0; font-size:10pt; }
+  th,td{ text-align:left; padding:6pt 8pt; border-bottom:1pt solid var(--line); }
+  thead th{ border-bottom:1.5pt solid var(--slate); font-weight:600; }
+  td.c{ text-align:center; font-family:'JetBrains Mono',monospace; }
+  .hi{ color:var(--rose); font-weight:700; }
+  .lo{ color:var(--green); font-weight:600; }
+
+  /* two-column cards */
+  .cols{ display:flex; gap:10pt; margin-top:6pt; }
+  .card{ flex:1; border:1pt solid rgba(13,148,136,.35); border-radius:7pt; overflow:hidden; }
+  .card .hd{ background:var(--brand); color:#fff; font-weight:600; padding:6pt 10pt; font-size:10.5pt; }
+  .card .bd{ padding:8pt 10pt; }
+  .card ul{ padding-left:14pt; }
+  .card li{ font-size:9.5pt; margin:4pt 0; }
+
+  footer{
+    margin-top:auto; padding-top:6pt;
+    border-top:1pt solid var(--line);
+    font-size:8pt; color:var(--slate); font-family:'JetBrains Mono',monospace;
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1 ================= -->
+<div class="page">
+  <div class="band">
+    <div class="name">Encrypted<b>-</b>Chaos</div>
+    <div class="tag">Teaching an AI to read encrypted pictures</div>
+    <div class="sub">A bench that tests whether a neural network can rebuild an image from
+      its scrambled (encrypted) version <strong style="color:#fff">without ever being given
+      the password</strong>.</div>
+    <div class="meta">MS/PhD thesis MVP &nbsp;&bull;&nbsp; Supervisor: Dr. Ayesha Khalid
+      &nbsp;&bull;&nbsp; github.com/ali-Hamza817/Encrypted-Chaos</div>
+  </div>
+
+  <h2>The problem, in plain English</h2>
+  <p>Many apps protect images with <strong>chaos-based encryption</strong>: fast maths that
+  scrambles pixels using chaotic (wildly unpredictable) number sequences. It is popular
+  because full-strength encryption such as AES can be slow for large images.</p>
+
+  <p>These schemes are judged by <strong>statistical tests</strong>: does the scrambled
+  image look like random noise? does changing one bit of the key change the whole output?
+  Almost every published scheme passes.</p>
+
+  <div class="callout rule">
+    <strong>But passing those tests does not prove the scheme is safe against a modern
+    attacker who uses machine learning.</strong> Instead of doing classical maths to
+    recover the key, such an attacker collects many <em>(original image, encrypted image)</em>
+    pairs and trains a neural network to undo the encryption directly. Published work in
+    2019 and 2025 showed this can work. The open questions: how far does it go? Does it
+    still work on keys or schemes the network never saw? How does it compare to AES?
+  </div>
+
+  <h2>What we built</h2>
+  <p><strong>Encrypted-Chaos</strong> is one tool that runs the whole experiment end to end:</p>
+  <ul>
+    <li><strong>Encrypt.</strong> Configurable chaos ciphers (three chaotic maps; optional
+      pixel shuffling and value mixing; adjustable strength) plus <strong>AES-256</strong>
+      as an honest reference point.</li>
+    <li><strong>Profile.</strong> Runs all the standard security tests automatically
+      (randomness, key sensitivity, pixel correlation, and more).</li>
+    <li><strong>Attack.</strong> Trains CNN and U-Net models on thousands of pairs, then
+      measures how much of a <em>new</em> image they can rebuild from the ciphertext alone.</li>
+    <li><strong>Verdict.</strong> Turns recovery quality into a plain LOW / MEDIUM / HIGH
+      <strong>attack-risk</strong> rating, and points to which part of the cipher caused the
+      weakness.</li>
+  </ul>
+  <p>A <strong>web app</strong> (React front end, Python back end) makes it tangible: upload
+  an image, pick a cipher, press one button, and see the original, the encrypted version,
+  and the AI's reconstruction side by side with a one-line verdict. A
+  <strong>verification kit</strong> of test images ships with the exact score each one
+  should produce.</p>
+
+  <footer>Encrypted-Chaos &bull; deep-learning cryptanalysis of chaos-based image encryption &bull; page 1 / 3</footer>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div class="page">
+  <figure>
+    <img src="recovery-weak-chaos.png" alt="reconstruction sample">
+    <figcaption>Weak chaos cipher. Top row: what an eavesdropper sees. Middle: the AI's
+      reconstruction from that alone, no password. Bottom: the true original.</figcaption>
+  </figure>
+
+  <h2>What it shows so far</h2>
+  <p>Small proof-of-concept run (one laptop CPU, a few minutes, tiny 32&times;32 images):</p>
+
+  <table>
+    <thead>
+      <tr><th>Cipher the AI attacked</th><th style="text-align:center">Image structure recovered</th><th style="text-align:center">Verdict</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Chaos &mdash; value mixing only, one fixed key</td><td class="c hi">81%</td><td class="c hi">HIGH</td></tr>
+      <tr><td>Chaos &mdash; add pixel shuffling</td><td class="c">5%</td><td class="c lo">LOW</td></tr>
+      <tr><td>Chaos &mdash; fresh key for every image</td><td class="c">5%</td><td class="c lo">LOW</td></tr>
+      <tr><td>AES-256</td><td class="c">5%</td><td class="c lo">LOW</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    The weak chaos cipher was <strong>clearly broken</strong> by the AI &mdash; yet it had
+    scored <em>textbook-perfect</em> on every classical security test (randomness 7.96 out
+    of 8, key-sensitivity 99.6%, near-zero pixel correlation).
+    <strong>The classical tests did not predict resistance to a learned attack.</strong>
+    Pixel shuffling and per-image keys are what actually helped.
+    <br><br>
+    <em>&ldquo;Recovered&rdquo; means the picture looks similar &mdash; not that the secret
+    key was extracted. That distinction is kept explicit throughout.</em>
+  </div>
+
+  <footer>Encrypted-Chaos &bull; deep-learning cryptanalysis of chaos-based image encryption &bull; page 2 / 3</footer>
+</div>
+
+<!-- ================= PAGE 3 ================= -->
+<div class="page">
+  <h2>Status</h2>
+  <div class="cols">
+    <div class="card">
+      <div class="hd">Done</div>
+      <div class="bd"><ul>
+        <li><span class="tick">&#10003;</span> Cipher library (3 chaotic maps + AES), proven reversible; 27 automated tests pass.</li>
+        <li><span class="tick">&#10003;</span> Automatic classical security profiling.</li>
+        <li><span class="tick">&#10003;</span> Data pipeline + CNN and U-Net attack models + training loop.</li>
+        <li><span class="tick">&#10003;</span> Honest scoring: improvement over a &ldquo;predict the average image&rdquo; baseline.</li>
+        <li><span class="tick">&#10003;</span> Four experiment setups: same-key, unseen-key, unseen-scheme, AES.</li>
+        <li><span class="tick">&#10003;</span> Full web app, deployable; code on GitHub with docs and a test kit.</li>
+      </ul></div>
+    </div>
+    <div class="card">
+      <div class="hd">Remaining &amp; limitations</div>
+      <div class="bd"><ul>
+        <li><span class="star">&#9733;</span> <strong>Scale.</strong> Demo used tiny synthetic images on a CPU. Needs real photo datasets (CIFAR-10, medical, satellite) on a GPU for publishable numbers.</li>
+        <li><span class="star">&#9733;</span> The headline break is the <em>easiest</em> case (one fixed key). Generalising to <em>unseen</em> keys and schemes is wired up but not yet run at scale.</li>
+        <li><span class="star">&#9733;</span> Risk cut-offs (low / medium / high) are placeholders; need calibration.</li>
+        <li><span class="star">&#9733;</span> Greyscale, square images, image encryption only, so far.</li>
+        <li><span class="star">&#9733;</span> Back end needs its own Python host (cannot run on Vercel &mdash; it needs PyTorch).</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <h2>Where it goes next</h2>
+  <div class="callout rule">
+    Run the unseen-key and unseen-scheme experiments at scale on a GPU with real datasets;
+    add a Transformer attack model; compare the learned attack against classical
+    cryptanalysis; then try to <em>fix</em> a chaos scheme and attack it again
+    (red-team / blue-team).
+  </div>
+
+  <h2>Why it matters</h2>
+  <p>Chaos-based image encryption appears constantly in the research literature, almost
+  always &ldquo;validated&rdquo; by the same handful of statistical tests. This project
+  gives a concrete, repeatable way to ask a harder question &mdash; <strong>can a machine
+  learn to undo it?</strong> &mdash; and shows, on at least one common construction, that
+  the answer is yes while every traditional metric says the scheme is strong.</p>
+
+  <p>For a thesis, the contribution is not &ldquo;we broke one cipher.&rdquo; It is a
+  measurement framework plus the harder follow-up questions: does a single trained attacker
+  generalise across keys and across schemes, and do the traditional security metrics have
+  <em>any</em> predictive value for resistance to data-driven attacks?</p>
+
+  <div class="callout" style="margin-top:12pt">
+    <strong>In one line:</strong> Encrypted-Chaos encrypts images with chaos ciphers, runs
+    the standard security checks, then trains neural networks to rebuild the originals from
+    ciphertext alone and grades them &mdash; with a working web app to try it. A common weak
+    setup is fully recoverable despite passing every classical test; stronger setups and AES
+    resist. Next: scale to real images on a GPU and answer the generalisation questions.
+  </div>
+
+  <footer>Encrypted-Chaos &bull; github.com/ali-Hamza817/Encrypted-Chaos &bull; page 3 / 3</footer>
+</div>
+
+</body>
+</html>
