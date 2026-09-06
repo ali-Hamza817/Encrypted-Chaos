@@ -1,0 +1,36 @@
+# Frontend demo -- KNOWN-WEAK baseline: diffusion-only, static key.
+# The keystream collapses to a fixed position-dependent pad, so a U-Net can
+# learn the inverse. This is the "attack succeeds" panel.
+name: demo_weak_chaos
+
+data:
+  source: synthetic
+  image_size: 32
+  channels: 1
+  n_train: 2500
+  n_test: 600
+  dynamic_nonce: false
+
+cipher:
+  cipher: chaos
+  map_type: logistic
+  rounds: 1
+  permute: false
+  diffuse: true
+  key_mode: static
+
+keys:
+  train_keys: ["demo-key-01"]
+  test_key: "demo-key-01"
+
+model:
+  name: unet
+  in_ch: 1
+  out_ch: 1
+  base: 24
+
+train:
+  epochs: 14
+  batch_size: 64
+  lr: 0.001
+  seed: 1234

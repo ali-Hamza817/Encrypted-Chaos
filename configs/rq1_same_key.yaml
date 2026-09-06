@@ -1,0 +1,35 @@
+# RQ1 -- same-key known-plaintext attack.
+# Train and test share ONE key; images are disjoint.
+name: rq1_same_key
+
+data:
+  source: cifar10          # synthetic | cifar10 | cifar100 | stl10
+  image_size: 32
+  channels: 1
+  n_train: 20000
+  n_test: 2000
+  dynamic_nonce: false
+
+cipher:
+  cipher: chaos
+  map_type: logistic
+  rounds: 2
+  permute: true
+  diffuse: true
+  key_mode: static
+
+keys:
+  train_keys: ["thesis-key-01"]
+  test_key: "thesis-key-01"   # SAME key -> this is the easy upper bound
+
+model:
+  name: unet               # cnn | unet
+  in_ch: 1
+  out_ch: 1
+  base: 32
+
+train:
+  epochs: 30
+  batch_size: 64
+  lr: 0.001
+  seed: 1234

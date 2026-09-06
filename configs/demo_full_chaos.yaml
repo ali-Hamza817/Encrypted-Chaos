@@ -1,0 +1,36 @@
+# Frontend demo -- HARDENED chaos: permutation + diffusion, 2 rounds, static key.
+# Global permutation destroys pixel locality; the same U-Net should recover far
+# less. This is the "attack degrades" panel.
+name: demo_full_chaos
+
+data:
+  source: synthetic
+  image_size: 32
+  channels: 1
+  n_train: 2500
+  n_test: 600
+  dynamic_nonce: false
+
+cipher:
+  cipher: chaos
+  map_type: logistic
+  rounds: 2
+  permute: true
+  diffuse: true
+  key_mode: static
+
+keys:
+  train_keys: ["demo-key-01"]
+  test_key: "demo-key-01"
+
+model:
+  name: unet
+  in_ch: 1
+  out_ch: 1
+  base: 24
+
+train:
+  epochs: 14
+  batch_size: 64
+  lr: 0.001
+  seed: 1234

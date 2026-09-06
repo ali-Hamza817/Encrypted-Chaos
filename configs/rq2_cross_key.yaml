@@ -1,0 +1,37 @@
+# RQ2 -- cross-key generalization (the primary contribution).
+# Train on MANY keys, test on an UNSEEN key. A model that still reconstructs
+# has learned a structural weakness of the map, not a key-specific inverse.
+name: rq2_cross_key
+
+data:
+  source: cifar10
+  image_size: 32
+  channels: 1
+  n_train: 40000
+  n_test: 2000
+  dynamic_nonce: false
+
+cipher:
+  cipher: chaos
+  map_type: logistic
+  rounds: 2
+  permute: true
+  diffuse: true
+  key_mode: static
+
+keys:
+  # each training chunk is encrypted with one of these
+  train_keys: ["k-a1", "k-b2", "k-c3", "k-d4", "k-e5", "k-f6", "k-g7", "k-h8"]
+  test_key: "k-UNSEEN-99"     # never seen during training
+
+model:
+  name: unet
+  in_ch: 1
+  out_ch: 1
+  base: 48
+
+train:
+  epochs: 40
+  batch_size: 64
+  lr: 0.001
+  seed: 1234

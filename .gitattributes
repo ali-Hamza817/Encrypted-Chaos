@@ -1,0 +1,8 @@
+# Normalize line endings on checkin; keep binaries untouched.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pt binary
+*.pth binary

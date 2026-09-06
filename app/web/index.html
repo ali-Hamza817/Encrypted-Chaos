@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encrypted-Chaos</title>
+<meta name="description" content="Interactive bench for deep-learning cryptanalysis of chaos-based image encryption.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230C0F16'/%3E%3Cpath d='M6 22c4-14 8-14 10 0s6 10 10-4' stroke='%2346E0C8' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground:#F3F5F7; --surface:#FFFFFF; --surface-2:#EAEEF2; --line:#D6DDE5;
+    --text:#171B22; --text-dim:#58626E;
+    --accent:#0C9E8B; --accent-ink:#06463f;
+    --data:#3C6FD6; --warn:#B0700C; --crit:#C33C39; --ok:#2C7A5C;
+    --shadow:0 1px 2px rgba(16,24,40,.06), 0 10px 30px rgba(16,24,40,.07);
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --r:12px;
+  }
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#0C0F16; --surface:#141A24; --surface-2:#1C2431; --line:#2A3340;
+      --text:#E7EAF0; --text-dim:#97A2B1;
+      --accent:#46E0C8; --accent-ink:#bff5ec;
+      --data:#7CB0FF; --warn:#F4B45C; --crit:#F0706C; --ok:#5FCF9F;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 38px rgba(0,0,0,.38);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#0C0F16; --surface:#141A24; --surface-2:#1C2431; --line:#2A3340;
+    --text:#E7EAF0; --text-dim:#97A2B1;
+    --accent:#46E0C8; --accent-ink:#bff5ec;
+    --data:#7CB0FF; --warn:#F4B45C; --crit:#F0706C; --ok:#5FCF9F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 38px rgba(0,0,0,.38);
+  }
+
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; scroll-behavior:smooth; }
+  body {
+    margin:0; background:var(--ground); color:var(--text);
+    font-family:var(--sans); font-size:16px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  img { max-width:100%; display:block; }
+  a { color:var(--accent-ink); text-underline-offset:2px; }
+  :root[data-theme="dark"] a, :root:not([data-theme="light"]) a { }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) a{ color:var(--accent);} }
+  :root[data-theme="dark"] a{ color:var(--accent); }
+  h1,h2,h3 { font-weight:600; letter-spacing:-.015em; margin:0; text-wrap:balance; }
+  button { font-family:inherit; }
+  .wrap { max-width:1180px; margin:0 auto; padding:0 22px; }
+  .mono { font-family:var(--mono); }
+  .eyebrow {
+    font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--accent-ink);
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .eyebrow{ color:var(--accent);} }
+  :root[data-theme="dark"] .eyebrow{ color:var(--accent); }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    position:sticky; top:0; z-index:20; backdrop-filter:saturate(1.4) blur(8px);
+    background:color-mix(in srgb, var(--ground) 82%, transparent);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .wrap { display:flex; align-items:center; gap:20px; height:56px; }
+  .brand { display:flex; align-items:center; gap:9px; font-weight:600; letter-spacing:-.02em; }
+  .brand svg { width:22px; height:22px; }
+  .topnav { margin-left:auto; display:flex; gap:22px; align-items:center; }
+  .topnav a { color:var(--text-dim); text-decoration:none; font-size:.9rem; }
+  .topnav a:hover { color:var(--text); }
+  .theme-btn {
+    border:1px solid var(--line); background:var(--surface); color:var(--text-dim);
+    width:34px; height:34px; border-radius:9px; cursor:pointer; display:grid; place-items:center;
+  }
+  .theme-btn:hover { color:var(--text); }
+  @media (max-width:720px){ .topnav a { display:none; } }
+
+  /* ---------- hero ---------- */
+  .hero { position:relative; overflow:hidden; border-bottom:1px solid var(--line); }
+  #bif {
+    position:absolute; inset:0; width:100%; height:100%; z-index:0; opacity:.55; pointer-events:none;
+    -webkit-mask-image:linear-gradient(to bottom,#000 30%,transparent 96%);
+    mask-image:linear-gradient(to bottom,#000 30%,transparent 96%);
+  }
+  .hero .wrap { position:relative; z-index:1; padding:46px 22px 40px; }
+  .hero h1 { font-size:clamp(1.7rem,3.4vw,2.5rem); line-height:1.1; max-width:20ch; margin:12px 0 12px; }
+  .hero p { color:var(--text-dim); max-width:64ch; margin:0; font-size:1.03rem; }
+  .hero .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .chip {
+    font-family:var(--mono); font-size:.74rem; padding:5px 10px; border-radius:999px;
+    border:1px solid var(--line); background:var(--surface); color:var(--text-dim);
+  }
+  .chip b { color:var(--text); font-weight:600; }
+
+  /* ---------- workbench ---------- */
+  .workbench { padding:34px 0 20px; }
+  .grid {
+    display:grid; grid-template-columns:360px 1fr; gap:22px; align-items:start;
+  }
+  @media (max-width:940px){ .grid { grid-template-columns:1fr; } }
+
+  .panel {
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+    box-shadow:var(--shadow);
+  }
+  .panel > h2 {
+    font-size:.82rem; font-family:var(--mono); font-weight:600; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--text-dim);
+    padding:15px 18px; border-bottom:1px solid var(--line);
+  }
+  .panel .body { padding:18px; }
+
+  /* controls */
+  .controls .body { display:flex; flex-direction:column; gap:16px; }
+  .dropzone {
+    border:1.5px dashed var(--line); border-radius:10px; padding:16px; text-align:center;
+    cursor:pointer; color:var(--text-dim); font-size:.88rem; transition:border-color .15s, background .15s;
+  }
+  .dropzone:hover, .dropzone.drag { border-color:var(--accent); background:var(--surface-2); }
+  .dropzone.has-img { padding:10px; }
+  .dropzone img { margin:0 auto 8px; width:96px; height:96px; object-fit:cover; border-radius:8px;
+    image-rendering:pixelated; border:1px solid var(--line); background:#000; }
+  .dz-row { display:flex; justify-content:space-between; gap:10px; font-size:.8rem; }
+  .dz-row button {
+    background:none; border:0; color:var(--accent-ink); cursor:pointer; padding:0; font-size:.8rem;
+    text-decoration:underline;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .dz-row button{ color:var(--accent);} }
+  :root[data-theme="dark"] .dz-row button{ color:var(--accent); }
+
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label {
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .field input[type=text], .field select {
+    width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--line);
+    background:var(--ground); color:var(--text); font-family:var(--sans); font-size:.92rem;
+  }
+  .field select { appearance:none; background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2397A2B1' stroke-width='2'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 11px center; padding-right:30px; }
+  .field input:focus, .field select:focus, .dropzone:focus-visible, button:focus-visible {
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .seg { display:flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+  .seg button {
+    flex:1; padding:8px 4px; background:var(--ground); border:0; color:var(--text-dim);
+    font-size:.82rem; cursor:pointer;
+  }
+  .seg button[aria-pressed="true"] { background:var(--accent); color:#05221e; font-weight:600; }
+  :root[data-theme="dark"] .seg button[aria-pressed="true"],
+  :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { color:#05221e; }
+
+  .range-row { display:flex; align-items:center; gap:10px; }
+  .range-row input[type=range] { flex:1; accent-color:var(--accent); }
+  .range-row .rv { font-family:var(--mono); font-size:.85rem; width:1.4em; text-align:right; }
+
+  .toggle { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .switch { position:relative; width:42px; height:24px; flex:none; }
+  .switch input { opacity:0; width:0; height:0; }
+  .switch span {
+    position:absolute; inset:0; border-radius:999px; background:var(--surface-2);
+    border:1px solid var(--line); transition:.15s; cursor:pointer;
+  }
+  .switch span::after {
+    content:""; position:absolute; width:18px; height:18px; border-radius:50%;
+    background:var(--text-dim); top:2px; left:2px; transition:.15s;
+  }
+  .switch input:checked + span { background:color-mix(in srgb,var(--accent) 40%,var(--surface-2)); border-color:var(--accent); }
+  .switch input:checked + span::after { transform:translateX(18px); background:var(--accent); }
+
+  .actions { display:flex; flex-direction:column; gap:10px; margin-top:2px; }
+  .btn {
+    padding:11px 14px; border-radius:10px; border:1px solid var(--line); cursor:pointer;
+    font-size:.92rem; font-weight:600; background:var(--surface-2); color:var(--text);
+  }
+  .btn:hover { border-color:var(--text-dim); }
+  .btn.primary { background:var(--accent); color:#05221e; border-color:var(--accent); }
+  :root[data-theme="dark"] .btn.primary, :root:not([data-theme="light"]) .btn.primary { color:#05221e; }
+  .btn.primary:hover { filter:brightness(1.05); }
+  .btn[disabled] { opacity:.55; cursor:progress; }
+  .hint { font-size:.78rem; color:var(--text-dim); line-height:1.5; }
+
+  /* output */
+  .trip { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:560px){ .trip { grid-template-columns:1fr; } }
+  .slot { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface-2); }
+  .slot .cap {
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-dim); padding:8px 10px; border-bottom:1px solid var(--line);
+    display:flex; justify-content:space-between; gap:6px;
+  }
+  .slot .frame { aspect-ratio:1/1; display:grid; place-items:center; background:
+    repeating-conic-gradient(var(--line) 0% 25%, transparent 0% 50%) 50% / 16px 16px; }
+  .slot .frame img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+  .slot .frame .empty { color:var(--text-dim); font-size:.8rem; font-family:var(--mono); }
+  .slot .sub { padding:7px 10px; font-family:var(--mono); font-size:.72rem; color:var(--text-dim); border-top:1px solid var(--line); }
+
+  .block-title {
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--text-dim); margin:24px 0 10px;
+  }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:10px; }
+  .tile {
+    border:1px solid var(--line); border-radius:10px; padding:11px 12px; background:var(--surface);
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .tile .k { font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); }
+  .tile .v { font-family:var(--mono); font-size:1.18rem; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .tile .s { font-size:.7rem; color:var(--text-dim); }
+  .tile[data-flag="ok"] { border-color:color-mix(in srgb,var(--ok) 45%,var(--line)); }
+  .tile[data-flag="ok"] .v { color:var(--ok); }
+  .tile[data-flag="warn"] { border-color:color-mix(in srgb,var(--warn) 45%,var(--line)); }
+  .tile[data-flag="warn"] .v { color:var(--warn); }
+
+  .verdict { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
+  .risk-pill {
+    font-family:var(--mono); font-weight:600; letter-spacing:.08em; font-size:.82rem;
+    padding:7px 14px; border-radius:8px; border:1.5px solid currentColor;
+  }
+  .risk-pill.HIGH { color:var(--crit); }
+  .risk-pill.MEDIUM { color:var(--warn); }
+  .risk-pill.LOW { color:var(--ok); }
+  .verdict .base { font-size:.82rem; color:var(--text-dim); }
+  .notes { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+  .note {
+    font-size:.82rem; color:var(--text-dim); border-left:3px solid var(--warn);
+    background:var(--surface-2); padding:9px 12px; border-radius:0 8px 8px 0;
+  }
+  .banner {
+    margin-top:12px; padding:10px 13px; border-radius:9px; font-size:.85rem;
+    border:1px solid var(--crit); color:var(--crit); background:color-mix(in srgb,var(--crit) 10%,var(--surface));
+  }
+  .muted-hidden { display:none; }
+
+  /* ---------- content sections ---------- */
+  section.doc { border-top:1px solid var(--line); padding:56px 0; }
+  section.doc h2 { font-size:clamp(1.3rem,2.4vw,1.7rem); margin:6px 0 12px; }
+  section.doc p { color:var(--text-dim); max-width:70ch; }
+  .diagram { overflow-x:auto; margin-top:14px; }
+  .diagram svg { min-width:560px; width:100%; max-width:640px; height:auto; display:block; }
+  .diagram svg text { fill:var(--text-dim); }
+  ol.rq { list-style:none; counter-reset:rq; padding:0; margin:14px 0 0; display:flex; flex-direction:column; }
+  ol.rq li { counter-increment:rq; display:grid; grid-template-columns:52px 1fr; gap:18px; padding:16px 0; border-top:1px solid var(--line); }
+  ol.rq li:last-child { border-bottom:1px solid var(--line); }
+  ol.rq li::before { content:"RQ" counter(rq); font-family:var(--mono); font-size:.78rem; font-weight:600; color:var(--accent-ink); padding-top:2px; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) ol.rq li::before{ color:var(--accent);} }
+  :root[data-theme="dark"] ol.rq li::before{ color:var(--accent); }
+  ol.rq .q { margin:0 0 3px; color:var(--text); font-size:.95rem; }
+  ol.rq .t { font-family:var(--mono); font-size:.72rem; color:var(--text-dim); }
+  ol.rq .star { color:var(--warn); }
+  pre {
+    font-family:var(--mono); font-size:.82rem; line-height:1.7; background:var(--surface-2);
+    border:1px solid var(--line); border-radius:10px; padding:14px 16px; overflow-x:auto;
+  }
+  pre .c { color:var(--text-dim); }
+  footer { border-top:1px solid var(--line); padding:34px 0 60px; color:var(--text-dim); font-size:.86rem; }
+  footer .refs { font-family:var(--mono); font-size:.75rem; line-height:1.9; margin-top:10px; }
+  .disc { border-left:3px solid var(--warn); background:var(--surface-2); padding:12px 15px; border-radius:0 8px 8px 0; margin-top:8px; }
+  .disc b { color:var(--text); }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".08"/><path d="M5 23c4.5-16 9-16 11 0s6.5 11 11-5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+      Encrypted-Chaos
+    </span>
+    <nav class="topnav">
+      <a href="#workbench">Workbench</a>
+      <a href="#how">How it works</a>
+      <a href="#research">Research</a>
+      <button class="theme-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">◐</button>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <canvas id="bif" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <span class="eyebrow">Deep-learning cryptanalysis &nbsp;·&nbsp; Supervisor: Dr. Ayesha Khalid</span>
+    <h1>Read an encrypted image back &mdash; with no key.</h1>
+    <p>
+      Encrypt an image with a chaos-based cipher, profile it with the classical security
+      metrics, then turn a trained CNN / U-Net loose on the ciphertext and measure how much
+      of the plaintext it recovers. AES-256-CTR is included as the control.
+    </p>
+    <div class="chips">
+      <span class="chip"><b>Target</b> chaos image encryption</span>
+      <span class="chip"><b>Attack</b> known-plaintext, key-free</span>
+      <span class="chip"><b>Readout</b> PSNR · SSIM · Attack Risk</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap workbench" id="workbench">
+  <div class="grid">
+
+    <!-- ============ CONTROLS ============ -->
+    <form class="panel controls" id="form" autocomplete="off">
+      <h2>Controls</h2>
+      <div class="body">
+
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload an image">
+          <img id="thumb" alt="" hidden>
+          <div id="dzText">Drop an image here, or click to choose<br><span class="mono" style="font-size:.75rem">PNG · JPG · BMP</span></div>
+          <div class="dz-row" id="dzRow" hidden>
+            <span id="fileName" class="mono"></span>
+            <button type="button" id="useSample">use sample</button>
+          </div>
+          <input type="file" id="file" accept="image/*" hidden>
+        </div>
+
+        <div class="field">
+          <label for="model">Attack model</label>
+          <select id="model" name="model_id"></select>
+          <span class="hint" id="modelHint">Pick a model to auto-match the cipher settings it was trained on.</span>
+        </div>
+
+        <div class="field">
+          <label>Cipher</label>
+          <div class="seg" id="cipherSeg" role="group" aria-label="Cipher">
+            <button type="button" data-v="chaos" aria-pressed="true">Chaos map</button>
+            <button type="button" data-v="aes" aria-pressed="false">AES-256-CTR</button>
+          </div>
+        </div>
+
+        <div class="row2" data-chaos>
+          <div class="field">
+            <label for="map_type">Chaotic map</label>
+            <select id="map_type" name="map_type">
+              <option value="logistic">logistic</option>
+              <option value="logistic2d">2D logistic</option>
+              <option value="henon">Hénon</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="key_mode">Key mode</label>
+            <select id="key_mode" name="key_mode">
+              <option value="static">static</option>
+              <option value="dynamic">dynamic</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" data-chaos>
+          <label for="rounds">Rounds</label>
+          <div class="range-row">
+            <input type="range" id="rounds" name="rounds" min="1" max="5" step="1" value="2">
+            <span class="rv" id="roundsV">2</span>
+          </div>
+        </div>
+
+        <div class="row2" data-chaos>
+          <div class="toggle">
+            <span class="field"><label>Permutation</label></span>
+            <label class="switch"><input type="checkbox" id="permute" checked><span></span></label>
+          </div>
+          <div class="toggle">
+            <span class="field"><label>Diffusion</label></span>
+            <label class="switch"><input type="checkbox" id="diffuse" checked><span></span></label>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="seed">Secret passphrase</label>
+            <input type="text" id="seed" name="seed" value="thesis-key-01">
+          </div>
+          <div class="field">
+            <label for="size">Image size</label>
+            <select id="size" name="size">
+              <option>32</option><option selected>64</option><option>96</option><option>128</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn" id="btnAnalyze">Encrypt &amp; profile</button>
+          <button type="button" class="btn primary" id="btnAttack">Run ML attack</button>
+        </div>
+        <div class="banner muted-hidden" id="banner"></div>
+      </div>
+    </form>
+
+    <!-- ============ OUTPUT ============ -->
+    <div class="panel output">
+      <h2>Output</h2>
+      <div class="body">
+        <div class="trip">
+          <figure class="slot">
+            <figcaption class="cap"><span>Plaintext</span><span id="capPlain"></span></figcaption>
+            <div class="frame"><span class="empty" id="emptyPlain">—</span><img id="imgPlain" alt="Plaintext image" hidden></div>
+            <div class="sub">original</div>
+          </figure>
+          <figure class="slot">
+            <figcaption class="cap"><span>Ciphertext</span><span id="capCipher"></span></figcaption>
+            <div class="frame"><span class="empty" id="emptyCipher">—</span><img id="imgCipher" alt="Ciphertext image" hidden></div>
+            <div class="sub">model input</div>
+          </figure>
+          <figure class="slot">
+            <figcaption class="cap"><span>Recovered</span><span id="capRec"></span></figcaption>
+            <div class="frame"><span class="empty" id="emptyRec">—</span><img id="imgRec" alt="Recovered image" hidden></div>
+            <div class="sub" id="recSub">model output</div>
+          </figure>
+        </div>
+
+        <div id="cryptoBlock" class="muted-hidden">
+          <div class="block-title">Cryptographic profile &mdash; ciphertext</div>
+          <div class="tiles" id="cryptoTiles"></div>
+        </div>
+
+        <div id="attackBlock" class="muted-hidden">
+          <div class="block-title">Learned attack &mdash; reconstruction on this image</div>
+          <div class="tiles" id="attackTiles"></div>
+          <div class="verdict">
+            <span class="risk-pill" id="riskPill">—</span>
+            <span class="base" id="riskBase"></span>
+          </div>
+          <div class="notes" id="notes"></div>
+        </div>
+
+        <div id="idleNote" class="hint" style="margin-top:18px">
+          Loaded with the bundled sample image. Choose a model and press
+          <b>Run ML attack</b> &mdash; it will encrypt with the settings that model was trained on and
+          try to reconstruct the original. Then change rounds / permutation and watch recovery fall.
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<section class="doc wrap" id="how">
+  <span class="eyebrow">How it works</span>
+  <h2>One pipeline, two readouts</h2>
+  <p>
+    The same plaintext&ndash;ciphertext pairs feed both the defensive profile and the offensive
+    model. They are meant to be read together: a scheme can score almost perfectly on the
+    classical metrics and still lose ground to the learned attack.
+  </p>
+  <div class="diagram" role="img" aria-label="An image dataset is encrypted with a chaos or AES cipher to form plaintext-ciphertext pairs. Those feed a cryptographic profile (entropy, NPCR, UACI, correlation) and an ML attack (CNN or U-Net) scored by PSNR, SSIM and MSE. Both meet at an Attack Risk verdict.">
+    <svg viewBox="0 0 600 430" xmlns="http://www.w3.org/2000/svg" fill="none" font-family="IBM Plex Mono, monospace" font-size="12">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--text-dim)"/></marker></defs>
+      <g stroke="var(--line)" stroke-width="1.5">
+        <line x1="300" y1="46" x2="300" y2="66" marker-end="url(#ah)"/>
+        <line x1="300" y1="118" x2="300" y2="138" marker-end="url(#ah)"/>
+        <line x1="300" y1="190" x2="300" y2="210" marker-end="url(#ah)"/>
+        <path d="M300 210 L300 226 L150 226 L150 250" marker-end="url(#ah)"/>
+        <path d="M300 210 L300 226 L450 226 L450 250" marker-end="url(#ah)"/>
+        <path d="M150 322 L150 356 L300 356 L300 374" marker-end="url(#ah)"/>
+        <path d="M450 322 L450 356 L300 356"/>
+      </g>
+      <g>
+        <rect x="200" y="8" width="200" height="38" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="300" y="32" text-anchor="middle" fill="var(--text)">Image dataset</text>
+        <rect x="178" y="66" width="244" height="52" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="300" y="88" text-anchor="middle" fill="var(--text)">Chaos / AES encryption</text><text x="300" y="106" text-anchor="middle">permute · diffuse · rounds · key</text>
+        <rect x="190" y="138" width="220" height="52" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="300" y="160" text-anchor="middle" fill="var(--text)">Plaintext–ciphertext pairs</text><text x="300" y="178" text-anchor="middle">held-out test split</text>
+        <rect x="44" y="250" width="212" height="72" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="150" y="272" text-anchor="middle" fill="var(--text)">Cryptographic profile</text><text x="150" y="290" text-anchor="middle">entropy · NPCR · UACI</text><text x="150" y="307" text-anchor="middle">correlation · key sens.</text>
+        <rect x="344" y="250" width="212" height="72" rx="8" fill="var(--surface)" stroke="var(--line)"/><text x="450" y="272" text-anchor="middle" fill="var(--text)">ML attack — CNN / U-Net</text><text x="450" y="290" text-anchor="middle">cipher → fθ → plaintext̂</text><text x="450" y="307" text-anchor="middle">PSNR · SSIM · MSE</text>
+        <rect x="184" y="374" width="232" height="48" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/><text x="300" y="403" text-anchor="middle" fill="var(--text)">Attack Risk verdict</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<section class="doc wrap" id="research">
+  <span class="eyebrow">Research questions</span>
+  <h2>What the thesis answers</h2>
+  <p>Reproducing the 2019 attack is not a contribution in 2026. These push the work toward
+     <i>generalization</i> &mdash; and toward whether the classical metrics predict resistance to
+     data-driven attacks at all.</p>
+  <ol class="rq">
+    <li><div><p class="q">Under a fixed key, can a CNN / U-Net reconstruct <b>unseen plaintext images</b>, and at what fidelity?</p><span class="t">same-key known-plaintext attack · baseline</span></div></li>
+    <li><div><p class="q">Does a model trained on <b>many keys</b> generalize to ciphertext from an <b>unseen key</b>?</p><span class="t"><span class="star">★</span> primary contribution · cross-key generalization</span></div></li>
+    <li><div><p class="q">Does a model trained on one chaotic map <b>transfer</b> to a different chaotic construction?</p><span class="t"><span class="star">★</span> secondary · cross-algorithm transfer</span></div></li>
+    <li><div><p class="q">Under identical budgets, are chaos schemes <b>more susceptible than AES-CTR</b> on the same images?</p><span class="t">control · fairness bound</span></div></li>
+    <li><div><p class="q">Which components drive attack success &mdash; permutation vs diffusion, rounds, keying mode?</p><span class="t"><span class="star">★</span> vulnerability attribution · ablations</span></div></li>
+    <li><div><p class="q">How many known pairs are needed to reach a target reconstruction quality?</p><span class="t">data-efficiency curve</span></div></li>
+  </ol>
+</section>
+
+<section class="doc wrap" id="run">
+  <span class="eyebrow">Run it</span>
+  <h2>Reproduce locally</h2>
+  <pre><span class="c"># install once</span>
+pip install -r requirements.txt
+
+<span class="c"># this web app</span>
+python scripts/serve.py            <span class="c"># -> http://localhost:8000</span>
+
+<span class="c"># the training experiments behind the models</span>
+python scripts/run_experiment.py configs/rq2_cross_key.yaml
+python scripts/run_demo_suite.py</pre>
+</section>
+
+<footer class="wrap">
+  <div class="disc">
+    <b>Reading the numbers honestly.</b> A high score means the model recovered perceptual
+    <i>structure</i> &mdash; not that the secret key was extracted. A static keystream reduces to a
+    fixed position-dependent pad any learner can memorise; that configuration is the
+    known-vulnerable baseline, shown for contrast. The hardened-chaos and AES results are the
+    meaningful comparison.
+  </div>
+  <p class="refs">
+    [1] He, Ming, Wang &amp; Wang (2019). A deep learning based attack for the chaos-based image encryption. arXiv:1907.12245.<br>
+    [2] Zhang &amp; Liu (2023). Chaos-based image encryption: review, application, and challenges. Mathematics 11(11):2585.
+  </p>
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { file: null, models: [], model: null };
+
+/* ---------------- theme ---------------- */
+(function () {
+  const saved = localStorage.getItem("cc-theme");
+  if (saved) document.documentElement.setAttribute("data-theme", saved);
+  $("themeBtn").addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const dark = cur ? cur === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = dark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("cc-theme", next);
+    drawBif();
+  });
+})();
+
+/* ---------------- bifurcation canvas ---------------- */
+const cv = $("bif"), ctx = cv.getContext("2d");
+function accent() {
+  return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#46E0C8";
+}
+function drawBif() {
+  const w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = w * dpr; cv.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h); ctx.fillStyle = accent();
+  const cols = Math.max(360, Math.floor(w));
+  for (let i = 0; i < cols; i++) {
+    const r = 3.5 + 0.5 * i / cols; let x = 0.5;
+    for (let k = 0; k < 110; k++) x = r * x * (1 - x);
+    for (let j = 0; j < 80; j++) { x = r * x * (1 - x); ctx.globalAlpha = 0.14; ctx.fillRect(i / cols * w, (1 - x) * h, 1, 1); }
+  }
+  ctx.globalAlpha = 1;
+}
+drawBif();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawBif, 180); });
+
+/* ---------------- controls wiring ---------------- */
+$("rounds").addEventListener("input", (e) => $("roundsV").textContent = e.target.value);
+
+let cipherKind = "chaos";
+$("cipherSeg").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  cipherKind = b.dataset.v;
+  [...$("cipherSeg").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  document.querySelectorAll("[data-chaos]").forEach(el => el.style.opacity = cipherKind === "aes" ? .4 : 1);
+  document.querySelectorAll("[data-chaos] input,[data-chaos] select").forEach(el => el.disabled = cipherKind === "aes");
+});
+
+/* dropzone */
+const dz = $("dropzone");
+dz.addEventListener("click", () => $("file").click());
+dz.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } });
+dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("drag"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
+dz.addEventListener("drop", (e) => { e.preventDefault(); dz.classList.remove("drag"); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+$("file").addEventListener("change", (e) => { if (e.target.files[0]) setFile(e.target.files[0]); });
+$("useSample").addEventListener("click", (e) => { e.stopPropagation(); clearFile(); });
+
+function setFile(f) {
+  state.file = f;
+  const url = URL.createObjectURL(f);
+  $("thumb").src = url; $("thumb").hidden = false;
+  $("dzText").hidden = true; $("dzRow").hidden = false;
+  $("fileName").textContent = f.name.length > 22 ? f.name.slice(0, 20) + "…" : f.name;
+  dz.classList.add("has-img");
+}
+function clearFile() {
+  state.file = null; $("file").value = "";
+  $("thumb").hidden = true; $("dzText").hidden = false; $("dzRow").hidden = true;
+  dz.classList.remove("has-img");
+}
+
+/* ---------------- health / models ---------------- */
+async function loadHealth() {
+  try {
+    const h = await (await fetch("/api/health")).json();
+    state.models = h.models || [];
+    const sel = $("model"); sel.innerHTML = "";
+    if (!state.models.length) {
+      sel.innerHTML = '<option value="">no trained model found</option>';
+      $("modelHint").textContent = "Train one: python scripts/run_demo_suite.py — then reload.";
+      $("btnAttack").disabled = true;
+      return;
+    }
+    state.models.forEach(m => {
+      const o = document.createElement("option");
+      o.value = m.id;
+      o.textContent = m.label + (m.ssim_gain != null ? `  (SSIM gain ${m.ssim_gain >= 0 ? "+" : ""}${m.ssim_gain})` : "");
+      sel.appendChild(o);
+    });
+    sel.addEventListener("change", syncModel);
+    syncModel();
+  } catch (e) { showBanner("Could not reach the API. Is the server running?"); }
+}
+function syncModel() {
+  const m = state.models.find(x => x.id === $("model").value);
+  state.model = m; if (!m) return;
+  const c = m.cipher_cfg || {};
+  if (c.cipher) { cipherKind = c.cipher; [...$("cipherSeg").children].forEach(x => x.setAttribute("aria-pressed", x.dataset.v === c.cipher)); }
+  if (c.map_type) $("map_type").value = c.map_type;
+  if (c.key_mode) $("key_mode").value = c.key_mode;
+  if (c.rounds) { $("rounds").value = c.rounds; $("roundsV").textContent = c.rounds; }
+  if (c.permute != null) $("permute").checked = !!c.permute;
+  if (c.diffuse != null) $("diffuse").checked = !!c.diffuse;
+  if (m.size) $("size").value = String(m.size);
+  document.querySelectorAll("[data-chaos]").forEach(el => el.style.opacity = cipherKind === "aes" ? .4 : 1);
+  document.querySelectorAll("[data-chaos] input,[data-chaos] select").forEach(el => el.disabled = cipherKind === "aes");
+  $("modelHint").innerHTML = `Trained target: <b>${m.label}</b>` +
+    (m.ssim != null ? ` — held-out SSIM ${m.ssim} vs ${m.ssim_baseline} floor (gain ${m.ssim_gain >= 0 ? "+" : ""}${m.ssim_gain}), risk ${m.risk}.` : ".") +
+    ` Settings below are matched to it; change them to run an ablation.`;
+}
+
+/* ---------------- form -> FormData ---------------- */
+function formData() {
+  const fd = new FormData();
+  if (state.file) fd.append("image", state.file);
+  fd.append("cipher", cipherKind);
+  fd.append("map_type", $("map_type").value);
+  fd.append("rounds", $("rounds").value);
+  fd.append("permute", $("permute").checked);
+  fd.append("diffuse", $("diffuse").checked);
+  fd.append("key_mode", $("key_mode").value);
+  fd.append("seed", $("seed").value || "key");
+  fd.append("size", $("size").value);
+  fd.append("gray", "true");
+  return fd;
+}
+function showBanner(msg) { const b = $("banner"); b.textContent = msg; b.classList.remove("muted-hidden"); }
+function hideBanner() { $("banner").classList.add("muted-hidden"); }
+function busy(btn, on, label) { btn.disabled = on; btn.textContent = on ? label : btn.dataset.label; }
+["btnAnalyze", "btnAttack"].forEach(id => $(id).dataset.label = $(id).textContent);
+
+function setImg(imgId, emptyId, b64) {
+  $(imgId).src = "data:image/png;base64," + b64; $(imgId).hidden = false; $(emptyId).hidden = true;
+}
+function flagEntropy(v) { return v >= 7.90 ? "ok" : "warn"; }
+function flagCorr(v) { return Math.abs(v) <= 0.05 ? "ok" : "warn"; }
+function flagNpcr(v) { return v >= 99.0 ? "ok" : "warn"; }
+function flagUaci(v) { return (v >= 30 && v <= 36) ? "ok" : "warn"; }
+function tile(k, v, s, flag) {
+  return `<div class="tile"${flag ? ` data-flag="${flag}"` : ""}><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s || ""}</span></div>`;
+}
+
+/* ---------------- analyze ---------------- */
+$("btnAnalyze").addEventListener("click", async () => {
+  hideBanner(); busy($("btnAnalyze"), true, "Encrypting…");
+  try {
+    const r = await fetch("/api/analyze", { method: "POST", body: formData() });
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    const d = await r.json();
+    setImg("imgPlain", "emptyPlain", d.plain_png);
+    setImg("imgCipher", "emptyCipher", d.cipher_png);
+    $("capPlain").textContent = d.size + "²";
+    $("capCipher").textContent = d.size + "²";
+    const m = d.metrics, c = m.corr, ks = m.key_sensitivity;
+    $("cryptoTiles").innerHTML =
+      tile("Cipher entropy", m.cipher_entropy.toFixed(3), "ideal ≈ 7.99", flagEntropy(m.cipher_entropy)) +
+      tile("Plain entropy", m.plain_entropy.toFixed(3), "for reference", null) +
+      tile("Corr — horiz.", c.horizontal.toFixed(4), "ideal ≈ 0", flagCorr(c.horizontal)) +
+      tile("Corr — vert.", c.vertical.toFixed(4), "ideal ≈ 0", flagCorr(c.vertical)) +
+      tile("Corr — diag.", c.diagonal.toFixed(4), "ideal ≈ 0", flagCorr(c.diagonal)) +
+      tile("Key sens. NPCR", ks.npcr.toFixed(2) + "%", "ideal ≈ 99.6", flagNpcr(ks.npcr)) +
+      tile("Key sens. UACI", ks.uaci.toFixed(2) + "%", "ideal ≈ 33.5", flagUaci(ks.uaci)) +
+      tile("Histogram χ²", m.histogram_chi2.toFixed(1), "lower = flatter", null);
+    $("cryptoBlock").classList.remove("muted-hidden");
+    $("idleNote").classList.add("muted-hidden");
+  } catch (e) { showBanner("Analyze failed: " + e.message); }
+  busy($("btnAnalyze"), false);
+});
+
+/* ---------------- attack ---------------- */
+$("btnAttack").addEventListener("click", async () => {
+  hideBanner(); busy($("btnAttack"), true, "Attacking…");
+  try {
+    const r = await fetch("/api/attack", { method: "POST", body: formData() });
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    const d = await r.json();
+    setImg("imgPlain", "emptyPlain", d.plain_png);
+    setImg("imgCipher", "emptyCipher", d.cipher_png);
+    setImg("imgRec", "emptyRec", d.recovered_png);
+    $("capPlain").textContent = d.size + "²";
+    $("capCipher").textContent = d.size + "²";
+    $("capRec").textContent = "SSIM " + d.ssim;
+    $("recSub").textContent = "model output · " + d.model_id;
+    const gain = d.ssim_gain;
+    const gflag = gain == null ? null : gain >= 0.30 ? "ok" : gain >= 0.12 ? "warn" : null;
+    $("attackTiles").innerHTML =
+      tile("SSIM", d.ssim, "0 → 1 identical", null) +
+      tile("SSIM gain", gain == null ? "—" : (gain >= 0 ? "+" : "") + gain.toFixed(3),
+           "vs predict-mean floor" + (d.ssim_baseline != null ? " " + d.ssim_baseline : ""), gflag) +
+      tile("PSNR", d.psnr + " dB", "higher = closer", null) +
+      tile("MSE", d.mse, "lower = closer", null);
+    const pill = $("riskPill");
+    pill.className = "risk-pill " + d.risk; pill.textContent = "Attack Risk · " + d.risk;
+    const t = d.trained || {};
+    $("riskBase").textContent = t.ssim != null
+      ? `this model on its held-out test set: SSIM ${t.ssim} (floor ${t.ssim_baseline}, gain ${t.ssim_gain}) · PSNR ${t.psnr} dB · ${t.risk}`
+      : "";
+    $("notes").innerHTML = (d.notes || []).map(n => `<div class="note">${n}</div>`).join("");
+    $("attackBlock").classList.remove("muted-hidden");
+    $("idleNote").classList.add("muted-hidden");
+    if (!$("cryptoBlock").classList.contains("muted-hidden")) { /* keep */ }
+  } catch (e) { showBanner("Attack failed: " + e.message); }
+  busy($("btnAttack"), false);
+});
+
+loadHealth();
+</script>
+</body>
+</html>

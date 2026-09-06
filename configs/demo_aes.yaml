@@ -1,0 +1,34 @@
+# Frontend demo -- AES-CTR control, per-image random nonce.
+# The ciphertext carries no learnable signal about the plaintext; the U-Net can
+# only regress to the dataset mean. This is the "attack fails" panel.
+name: demo_aes
+
+data:
+  source: synthetic
+  image_size: 32
+  channels: 1
+  n_train: 2500
+  n_test: 600
+  dynamic_nonce: true
+
+cipher:
+  cipher: aes
+  key_mode: dynamic
+  key_bits: 256
+  seed: "demo-aes"
+
+keys:
+  train_keys: ["demo-aes"]
+  test_key: "demo-aes"
+
+model:
+  name: unet
+  in_ch: 1
+  out_ch: 1
+  base: 24
+
+train:
+  epochs: 14
+  batch_size: 64
+  lr: 0.001
+  seed: 1234

@@ -1,0 +1,44 @@
+# RQ3 -- cross-algorithm transfer.
+# Train on one chaotic family, test on another. Set train_cipher / test_cipher.
+name: rq3_cross_algo
+
+data:
+  source: cifar10
+  image_size: 32
+  channels: 1
+  n_train: 40000
+  n_test: 2000
+  dynamic_nonce: false
+
+# when present, these override `cipher` for the train / test splits
+train_cipher:
+  cipher: chaos
+  map_type: logistic
+  rounds: 2
+  permute: true
+  diffuse: true
+  key_mode: static
+
+test_cipher:
+  cipher: chaos
+  map_type: henon          # different construction at test time
+  rounds: 2
+  permute: true
+  diffuse: true
+  key_mode: static
+
+keys:
+  train_keys: ["k-a1", "k-b2", "k-c3", "k-d4"]
+  test_key: "k-UNSEEN-99"
+
+model:
+  name: unet
+  in_ch: 1
+  out_ch: 1
+  base: 48
+
+train:
+  epochs: 40
+  batch_size: 64
+  lr: 0.001
+  seed: 1234

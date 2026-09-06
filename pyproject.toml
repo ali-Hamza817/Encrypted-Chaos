@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chaoscrypt-analyzer"
+version = "0.1.0"
+description = "Deep-learning cryptanalysis of chaos-based image encryption"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24",
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "scikit-image>=0.21",
+    "PyYAML>=6.0",
+    "matplotlib>=3.7",
+    "tqdm>=4.65",
+    "cryptography>=41.0",
+    "streamlit>=1.28",
+    "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools]
+packages = ["chaoscrypt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

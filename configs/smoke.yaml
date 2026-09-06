@@ -1,0 +1,35 @@
+# Tiny end-to-end config -- synthetic data, ~1 minute on CPU. Used by quickstart.
+name: smoke
+
+data:
+  source: synthetic
+  image_size: 32
+  channels: 1
+  n_train: 400
+  n_test: 100
+  dynamic_nonce: false
+
+cipher:
+  cipher: chaos
+  map_type: logistic
+  rounds: 1
+  permute: false          # diffusion-only -> a shallow net should recover it
+  diffuse: true
+  key_mode: static
+
+keys:
+  train_keys: ["smoke-key"]
+  test_key: "smoke-key"
+
+model:
+  name: cnn
+  in_ch: 1
+  out_ch: 1
+  width: 48
+  depth: 6
+
+train:
+  epochs: 8
+  batch_size: 32
+  lr: 0.001
+  seed: 1234

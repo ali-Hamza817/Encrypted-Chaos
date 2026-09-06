@@ -1,0 +1,33 @@
+# RQ4 -- AES-CTR control. Same images, same attack budget, same model.
+# Expectation: with a per-image nonce the attack fails at every budget.
+name: rq4_aes_baseline
+
+data:
+  source: cifar10
+  image_size: 32
+  channels: 1
+  n_train: 40000
+  n_test: 2000
+  dynamic_nonce: true        # random nonce per image (given back to the attacker)
+
+cipher:
+  cipher: aes
+  key_mode: dynamic
+  key_bits: 256
+  seed: "aes-thesis"
+
+keys:
+  train_keys: ["aes-thesis"]
+  test_key: "aes-thesis"
+
+model:
+  name: unet
+  in_ch: 1
+  out_ch: 1
+  base: 48
+
+train:
+  epochs: 40
+  batch_size: 64
+  lr: 0.001
+  seed: 1234

@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+data/
+datasets/
+experiments/
+results/
+runs/
+*.pt
+*.pth
+*.ckpt
+.DS_Store
+.ipynb_checkpoints/
+.pytest_cache/

@@ -1,0 +1,38 @@
+# Frontend demo -- HARDENED chaos with PER-IMAGE keying.
+# Same permutation + diffusion + 2 rounds as demo_full_chaos, but key_mode:
+# dynamic mixes a fresh public nonce into the map seed for every image, so the
+# permutation and keystream differ image to image. There is no longer a fixed
+# mapping to memorise. This is the "attack collapses -- and here is the fix" panel.
+name: demo_dynamic_chaos
+
+data:
+  source: synthetic
+  image_size: 32
+  channels: 1
+  n_train: 2500
+  n_test: 600
+  dynamic_nonce: true
+
+cipher:
+  cipher: chaos
+  map_type: logistic
+  rounds: 2
+  permute: true
+  diffuse: true
+  key_mode: dynamic
+
+keys:
+  train_keys: ["demo-key-01"]
+  test_key: "demo-key-01"
+
+model:
+  name: unet
+  in_ch: 1
+  out_ch: 1
+  base: 24
+
+train:
+  epochs: 14
+  batch_size: 64
+  lr: 0.001
+  seed: 1234
