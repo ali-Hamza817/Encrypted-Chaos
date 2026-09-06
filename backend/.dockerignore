@@ -1,0 +1,10 @@
+**/__pycache__
+**/*.pyc
+.venv
+.pytest_cache
+experiments/*.log
+experiments/smoke
+experiments/enc_profile
+experiments/demo_*/history.json
+experiments/demo_*/samples.png
+tests
