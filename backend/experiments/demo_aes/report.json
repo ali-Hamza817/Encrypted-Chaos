@@ -1,0 +1,67 @@
+{
+  "name": "demo_aes",
+  "config": {
+    "name": "demo_aes",
+    "data": {
+      "source": "synthetic",
+      "image_size": 32,
+      "channels": 1,
+      "n_train": 2500,
+      "n_test": 600,
+      "dynamic_nonce": true
+    },
+    "cipher": {
+      "cipher": "aes",
+      "key_mode": "dynamic",
+      "key_bits": 256,
+      "seed": "demo-aes"
+    },
+    "keys": {
+      "train_keys": [
+        "demo-aes"
+      ],
+      "test_key": "demo-aes"
+    },
+    "model": {
+      "name": "unet",
+      "in_ch": 1,
+      "out_ch": 1,
+      "base": 24
+    },
+    "train": {
+      "epochs": 14,
+      "batch_size": 64,
+      "lr": 0.001,
+      "seed": 1234
+    }
+  },
+  "n_params": 1085305,
+  "train_cipher": [
+    {
+      "cipher": "aes",
+      "key_mode": "dynamic",
+      "key_bits": 256,
+      "seed": "demo-aes"
+    }
+  ],
+  "test_cipher": {
+    "cipher": "aes",
+    "key_mode": "dynamic",
+    "key_bits": 256,
+    "seed": "demo-aes"
+  },
+  "scores": {
+    "mse_mean": 0.053956769652631874,
+    "mse_std": 0.031773857161201284,
+    "psnr_mean": 13.681560257174949,
+    "psnr_std": 3.311970438121872,
+    "ssim_mean": 0.05276347469450844,
+    "ssim_std": 0.05550783938806139,
+    "n": 600,
+    "ssim_baseline": 0.05503633000360607,
+    "psnr_baseline": 13.686292167928423,
+    "ssim_gain": -0.0022728553090976267,
+    "psnr_gain": -0.004731910753474011,
+    "risk": "LOW"
+  }
+}

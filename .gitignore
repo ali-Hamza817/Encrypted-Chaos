@@ -3,14 +3,35 @@ __pycache__/
 .venv/
 venv/
 env/
-data/
-datasets/
-experiments/
-results/
-runs/
-*.pt
-*.pth
-*.ckpt
+node_modules/
+dist/
+.vercel/
 .DS_Store
 .ipynb_checkpoints/
 .pytest_cache/
+
+# datasets / caches
+data/
+datasets/
+/backend/data/
+/backend/datasets/
+results/
+runs/
+
+# model checkpoints (generic) ...
+*.pt
+*.pth
+*.ckpt
+
+# experiment outputs are NOT committed ...
+/experiments/
+/backend/experiments/*
+# ... EXCEPT the demo model checkpoints the deployed API loads at startup
+!/backend/experiments/demo_aes/
+!/backend/experiments/demo_dynamic_chaos/
+!/backend/experiments/demo_full_chaos/
+!/backend/experiments/demo_weak_chaos/
+/backend/experiments/demo_*/history.json
+/backend/experiments/demo_*/samples.png
+/backend/experiments/*.log
+!/backend/experiments/demo_*/model.pt

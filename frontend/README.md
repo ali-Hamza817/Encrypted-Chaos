@@ -2,44 +2,38 @@
 
 Vite + React + TypeScript + Tailwind, with a few vendored **React Bits**
 components (`src/components/reactbits/`, MIT, adapted for a light theme). White
-background, Fraunces / Inter / JetBrains Mono.
+background, Poppins / JetBrains Mono.
 
-It talks to the FastAPI backend in [`../app/server.py`](../app/server.py).
+Talks to the FastAPI backend in [`../backend/`](../backend).
 
 ## Run locally
 
 ```bash
-# 1) start the backend (from the repo root)
-cd ..
-pip install -r requirements.txt
-python scripts/run_demo_suite.py          # trains the demo models (once)
-python scripts/serve.py                    # http://localhost:8000
+# 1) backend  (from repo root)
+cd backend
+pip install -r requirements-dev.txt
+python scripts/run_demo_suite.py        # trains the demo models (once)
+python scripts/serve.py                  # http://localhost:8000
 
-# 2) start this frontend
+# 2) this frontend  (new terminal, from repo root)
 cd frontend
 npm install
-npm run dev                                 # http://localhost:5173
+npm run dev                              # http://localhost:5173
 ```
 
 `vite.config.ts` proxies `/api` → `http://127.0.0.1:8000`, so no env config is
-needed locally. Override the target with `VITE_API_URL` if the backend runs
-elsewhere.
+needed locally. Override the target with `VITE_API_URL`.
 
 ## Deploy
 
-**Frontend → Vercel.** Import the repo, set **Root Directory** to `frontend`.
-Framework preset: Vite (already in `vercel.json`). Add an env var
-`VITE_API_URL` pointing at your deployed backend.
+**Frontend → Vercel.** Import the repo, set **Root Directory** to `frontend`
+(Vite preset comes from `vercel.json`). Add an environment variable
+`VITE_API_URL` pointing at the deployed backend, e.g.
+`https://encrypted-chaos-production.up.railway.app`.
 
-**Backend → any Python host** (Render, Railway, Fly, Hugging Face Spaces). It
-needs PyTorch, so it cannot run on Vercel's serverless runtime. Start command:
-
-```
-uvicorn app.server:app --host 0.0.0.0 --port $PORT
-```
-
-CORS is already open (`allow_origins=["*"]`); tighten it to your Vercel domain
-for production in `app/server.py`.
+**Backend → Railway.** Import the repo, set **Root Directory** to `backend`.
+`railway.json` provides the start command and `/api/health` health check. The
+four demo models ship in the repo, so the attack works immediately.
 
 ## Add more React Bits components
 
@@ -47,5 +41,4 @@ for production in `app/server.py`.
 
 ```bash
 npx shadcn@latest add @react-bits/silk
-npx shadcn@latest add @react-bits/count-up
 ```

@@ -1,0 +1,15 @@
+# Runtime deps for the Encrypted-Chaos API (Railway / any Python host).
+# CPU-only PyTorch keeps the build small and fast.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+numpy>=1.24
+torch>=2.2
+scikit-image>=0.21
+Pillow>=10.0
+PyYAML>=6.0
+matplotlib>=3.7
+tqdm>=4.65
+cryptography>=41.0
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9

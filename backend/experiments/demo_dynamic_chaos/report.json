@@ -1,0 +1,75 @@
+{
+  "name": "demo_dynamic_chaos",
+  "config": {
+    "name": "demo_dynamic_chaos",
+    "data": {
+      "source": "synthetic",
+      "image_size": 32,
+      "channels": 1,
+      "n_train": 2500,
+      "n_test": 600,
+      "dynamic_nonce": true
+    },
+    "cipher": {
+      "cipher": "chaos",
+      "map_type": "logistic",
+      "rounds": 2,
+      "permute": true,
+      "diffuse": true,
+      "key_mode": "dynamic"
+    },
+    "keys": {
+      "train_keys": [
+        "demo-key-01"
+      ],
+      "test_key": "demo-key-01"
+    },
+    "model": {
+      "name": "unet",
+      "in_ch": 1,
+      "out_ch": 1,
+      "base": 24
+    },
+    "train": {
+      "epochs": 14,
+      "batch_size": 64,
+      "lr": 0.001,
+      "seed": 1234
+    }
+  },
+  "n_params": 1085305,
+  "train_cipher": [
+    {
+      "cipher": "chaos",
+      "map_type": "logistic",
+      "rounds": 2,
+      "permute": true,
+      "diffuse": true,
+      "key_mode": "dynamic",
+      "seed": "demo-key-01"
+    }
+  ],
+  "test_cipher": {
+    "cipher": "chaos",
+    "map_type": "logistic",
+    "rounds": 2,
+    "permute": true,
+    "diffuse": true,
+    "key_mode": "dynamic",
+    "seed": "demo-key-01"
+  },
+  "scores": {
+    "mse_mean": 0.053991845687163954,
+    "mse_std": 0.03180015492434997,
+    "psnr_mean": 13.678656060727238,
+    "psnr_std": 3.3119107660861067,
+    "ssim_mean": 0.05227760062935801,
+    "ssim_std": 0.055268248177670044,
+    "n": 600,
+    "ssim_baseline": 0.05503633000360607,
+    "psnr_baseline": 13.686292167928423,
+    "ssim_gain": -0.0027587293742480576,
+    "psnr_gain": -0.007636107201184572,
+    "risk": "LOW"
+  }
+}

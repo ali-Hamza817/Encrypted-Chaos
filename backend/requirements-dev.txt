@@ -1,0 +1,9 @@
+# Local / full-featured extras on top of requirements.txt:
+#   torchvision  -> CIFAR-10 / STL-10 dataset sources (chaoscrypt/dataset.py)
+#   streamlit    -> the alternate dashboard (app/streamlit_app.py)
+#   pytest       -> the test suite
+-r requirements.txt
+
+torchvision>=0.15
+streamlit>=1.28
+pytest>=7.0

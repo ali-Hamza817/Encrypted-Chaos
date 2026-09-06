@@ -79,14 +79,16 @@ git clone https://github.com/ali-Hamza817/Encrypted-Chaos.git
 cd Encrypted-Chaos
 
 # ---- backend ----
+cd backend
 python -m venv .venv && . .venv/Scripts/activate      # macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt                    # runtime + torchvision/streamlit/pytest
 
 python scripts/quickstart.py          # 60-sec end-to-end smoke test, no downloads
-python scripts/run_demo_suite.py      # trains the 4 demo models (~20 min, CPU)
 python scripts/serve.py               # FastAPI  ->  http://localhost:8000
+#   the four demo models already ship in the repo; retrain with:
+#   python scripts/run_demo_suite.py
 
-# ---- frontend (new terminal) ----
+# ---- frontend (new terminal, from repo root) ----
 cd frontend
 npm install
 npm run dev                           # React app  ->  http://localhost:5173
@@ -97,13 +99,15 @@ and watch the recovery fall away.
 
 ### Verify it works
 
-`test_images/` ships with labelled images and a
-[checklist](test_images/README.md) of the exact score each should produce. Regenerate with
-`python scripts/make_test_images.py`.
+`backend/test_images/` ships with labelled images and a
+[checklist](backend/test_images/README.md) of the exact score each should produce.
+Regenerate with `python backend/scripts/make_test_images.py`.
 
 ---
 
 ## Run the research experiments
+
+From `backend/`:
 
 | Command | Question |
 |---|---|
@@ -113,8 +117,8 @@ and watch the recovery fall away.
 | `python scripts/run_experiment.py configs/rq4_aes_baseline.yaml` | **RQ4** — AES-CTR control |
 | `python scripts/evaluate_encryption.py --map logistic --rounds 2` | Cryptographic profile of a cipher |
 
-Each writes `experiments/<name>/` → `report.json` (config + scores), `history.json`,
-`samples.png`, `model.pt`.
+Each writes `backend/experiments/<name>/` → `report.json` (config + scores),
+`history.json`, `samples.png`, `model.pt`.
 
 ---
 
@@ -122,42 +126,61 @@ Each writes `experiments/<name>/` → `report.json` (config + scores), `history.
 
 ```
 Encrypted-Chaos/
-├── chaoscrypt/            core library
-│   ├── chaos.py           logistic / 2D-logistic / Hénon maps → keystream, permutation
-│   ├── encryption.py      ChaosImageCipher (permute + diffuse + rounds), AESImageCipher
-│   ├── crypto_metrics.py  entropy · NPCR · UACI · correlation · key sensitivity
-│   ├── image_metrics.py   MSE · PSNR · SSIM
-│   ├── dataset.py         procedural + torchvision sources, plaintext/ciphertext pairs
-│   ├── models.py          SimpleCNN, UNet
-│   ├── train.py           training loop
-│   └── evaluate.py        reconstruction scoring + predict-the-mean baseline + risk
-├── app/
-│   ├── server.py          FastAPI backend  (/api/health · /api/analyze · /api/attack)
-│   └── streamlit_app.py   alternate dashboard
-├── frontend/              Vite + React + TypeScript + Tailwind + React Bits (white theme)
-├── configs/               one YAML per experiment (rq1–rq4 + demo + smoke)
-├── scripts/               quickstart · run_experiment · run_demo_suite · serve · make_test_images
-├── test_images/           verification kit + expected-results checklist
-├── web/                   self-contained shareable results page
-├── RESEARCH.md            thesis framing · research questions · plan
-└── tests/                 pytest — cipher round-trips & metric sanity
+├── frontend/               →  deploy to Vercel  (Root Directory = frontend)
+│   Vite + React + TypeScript + Tailwind + React Bits, white theme, Poppins
+│
+├── backend/                →  deploy to Railway (Root Directory = backend)
+│   ├── app/
+│   │   ├── server.py       FastAPI  (/api/health · /api/analyze · /api/attack)
+│   │   └── streamlit_app.py    alternate dashboard
+│   ├── chaoscrypt/         core library
+│   │   ├── chaos.py        logistic / 2D-logistic / Hénon maps → keystream, permutation
+│   │   ├── encryption.py   ChaosImageCipher (permute + diffuse + rounds), AESImageCipher
+│   │   ├── crypto_metrics.py   entropy · NPCR · UACI · correlation · key sensitivity
+│   │   ├── image_metrics.py    MSE · PSNR · SSIM
+│   │   ├── dataset.py      procedural + torchvision sources, plaintext/ciphertext pairs
+│   │   ├── models.py       SimpleCNN, UNet
+│   │   ├── train.py        training loop
+│   │   └── evaluate.py     reconstruction scoring + predict-the-mean baseline + risk
+│   ├── configs/            one YAML per experiment (rq1–rq4 + demo + smoke)
+│   ├── scripts/            quickstart · run_experiment · run_demo_suite · serve · make_test_images
+│   ├── experiments/        the 4 pre-trained demo models ship here (rest is gitignored)
+│   ├── test_images/        verification kit + expected-results checklist
+│   ├── web/                self-contained shareable results page
+│   ├── tests/              pytest — cipher round-trips & metric sanity
+│   ├── requirements.txt    lean runtime (CPU torch + FastAPI)
+│   ├── requirements-dev.txt   + torchvision / streamlit / pytest
+│   ├── railway.json        start command + health check
+│   └── Procfile
+│
+├── docs/                   plain-English overview (PDF + LaTeX + HTML) + result images
+├── RESEARCH.md             thesis framing · research questions · plan
+└── README.md
 ```
 
 ---
 
 ## Deploy
 
-**Frontend → Vercel.** Import this repo, set **Root Directory = `frontend`** (Vite preset
-is in `frontend/vercel.json`). Add env var `VITE_API_URL` = your backend origin.
+### Frontend → Vercel
 
-**Backend → any Python host** (Render / Railway / Fly / HF Spaces) — it needs PyTorch, so
-it can't run on Vercel's serverless runtime:
+Import the repo → **Root Directory = `frontend`** (Vite preset comes from
+`frontend/vercel.json`). Add an environment variable:
 
-```
-uvicorn app.server:app --host 0.0.0.0 --port $PORT
-```
+| Key | Value |
+|---|---|
+| `VITE_API_URL` | your Railway backend URL, e.g. `https://encrypted-chaos-production.up.railway.app` |
 
-CORS is already open; tighten `allow_origins` to your Vercel domain for production.
+### Backend → Railway
+
+Import the repo → **Root Directory = `backend`**. `backend/railway.json` sets the
+start command (`uvicorn app.server:app --host 0.0.0.0 --port $PORT`) and the
+`/api/health` health check. Nixpacks reads `requirements.txt` (CPU-only PyTorch)
+and `.python-version`. The four demo models ship in the repo, so `/api/attack`
+works on first boot.
+
+CORS is open (`allow_origins=["*"]`) — tighten it to your Vercel domain in
+`backend/app/server.py` for production.
 
 ---
 
@@ -169,7 +192,7 @@ CORS is already open; tighten `allow_origins` to your Vercel domain for producti
   approximate — that configuration is the known-vulnerable baseline, shown for contrast.
 - Success is scored as **SSIM gain over a predict-the-mean floor**, not raw SSIM, so a
   homogeneous test set can't inflate a failed attack.
-- Risk thresholds in `chaoscrypt/evaluate.py` are placeholders — calibrate per dataset.
+- Risk thresholds in `backend/chaoscrypt/evaluate.py` are placeholders — calibrate per dataset.
 
 ---
 
